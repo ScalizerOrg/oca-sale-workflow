@@ -13,6 +13,12 @@ class SaleOrder(models.Model):
     delivery_status = fields.Selection(
         # Compute method have a different name then the field because
         # the method _compute_delivery_status already exist in odoo sale_stock
+        selection=[
+            ('pending', 'Not Delivered'),
+            ('started', 'Started'),
+            ('partial', 'Partially Delivered'),
+            ('full', 'Fully Delivered'),
+        ],
         compute="_compute_oca_delivery_status",
         store=True,
     )
