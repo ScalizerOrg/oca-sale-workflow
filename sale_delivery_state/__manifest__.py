@@ -11,7 +11,7 @@
     "author": "Akretion, Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "installable": True,
-    "depends": ["sale"],
+    "depends": ["sale", "sale_stock"],
     "data": [
         "views/sale_order_views.xml",
     ],
