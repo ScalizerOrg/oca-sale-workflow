@@ -27,12 +27,6 @@ class SaleOrder(models.Model):
         # Including the 'started' state
         # that is not used here but we compute it
         # if pickings are available, to be compatible.
-        selection=[
-            ("pending", "Not Delivered"),
-            ("started", "Started"),
-            ("partial", "Partially Delivered"),
-            ("full", "Fully Delivered"),
-        ],
     )
 
     force_delivery_state = fields.Boolean(
