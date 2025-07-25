@@ -60,7 +60,7 @@ class SaleOrder(models.Model):
             }
             return {"warning": warning}
 
-    @api.depends("partner_id", "user_id", "workflow_process_id")
+    @api.depends("partner_id", "user_id")
     def _compute_team_id(self):  # pylint: disable=W8110
         super()._compute_team_id()
         if self.workflow_process_id.team_id:
