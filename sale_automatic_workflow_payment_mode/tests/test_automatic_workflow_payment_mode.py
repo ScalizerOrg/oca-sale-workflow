@@ -56,6 +56,12 @@ class TestAutomaticWorkflowPaymentMode(TestCommon, TestAutomaticWorkflowMixin):
         self.acc_journ = self.env["account.journal"].create(
             {"name": "Bank US", "type": "bank", "code": "BNK68"}
         )
+
+        self.env["account.payment.method.line"].create({
+            "journal_id": self.acc_journ.id,
+            "payment_method_id": self.pay_method.id,
+        })
+
         self.pay_mode = self.env["account.payment.mode"].create(
             {
                 "name": "Julius Caesare payment",
