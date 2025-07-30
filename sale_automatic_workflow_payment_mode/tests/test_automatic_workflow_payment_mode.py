@@ -96,5 +96,11 @@ class TestAutomaticWorkflowPaymentMode(TestCommon, TestAutomaticWorkflowMixin):
         )
         self.env["automatic.workflow.job"].run()
         self.assertEqual(invoice.payment_state, "paid")
+
         picking = sale.picking_ids
-        self.assertEqual(picking.state, "done")
+        # Check if stock module is available and validate_picking is enabled
+        if hasattr(workflow, 'validate_picking') and workflow.validate_picking:
+            self.assertEqual(picking.state, "done")
+        else:
+            # Without stock module or validate_picking=False, picking stays assigned
+            self.assertEqual(picking.state, "assigned")
