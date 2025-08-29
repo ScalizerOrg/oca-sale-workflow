@@ -53,6 +53,8 @@ class SaleOrder(models.Model):
 
     @api.onchange("workflow_process_id")
     def _onchange_workflow_process_id(self):
+        if self.workflow_process_id and self.workflow_process_id.team_id:
+            self.team_id = self.workflow_process_id.team_id
         if self.workflow_process_id.warning:
             warning = {
                 "title": self.env._("Workflow Warning"),
