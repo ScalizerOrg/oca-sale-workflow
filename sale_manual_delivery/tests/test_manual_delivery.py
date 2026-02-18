@@ -1,13 +1,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import logging
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
-
+from odoo.addons.sale.tests.common import TestSaleCommon
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
-from odoo.addons.sale.tests.common import TestSaleCommon
-import logging
 _logger = logging.getLogger(__name__)
 
 @tagged("post_install", "-at_install")
@@ -18,8 +17,8 @@ class TestSaleStock(TestSaleCommon):
 
         # Use stable partner from TestSaleCommon (no demo xmlid dependency)
         cls.partner = cls.partner_a
-        cls.warehouse = cls.env.ref('stock.warehouse0')
-        cls.company = cls.env.ref('base.main_company')
+        cls.warehouse = cls.env.ref("stock.warehouse0")
+        cls.company = cls.env.ref("base.main_company")
 
 
         # Stock location
@@ -133,9 +132,7 @@ class TestSaleStock(TestSaleCommon):
     def test_00_sale_manual_delivery(self):
         """Test SO's manual delivery with a non-admin user."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order = model_order.create(
             {
@@ -183,9 +180,7 @@ class TestSaleStock(TestSaleCommon):
     def test_01_sale_standard_delivery(self):
         """Test SO's standard delivery."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order = model_order.create(
             {
@@ -222,9 +217,7 @@ class TestSaleStock(TestSaleCommon):
     def test_02_sale_various_manual_delivery(self):
         """Test partial manual deliveries, no-op deliveries, and over-delivery."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order = model_order.create(
             {
@@ -279,9 +272,7 @@ class TestSaleStock(TestSaleCommon):
     def test_03_sale_selected_lines(self):
         """Wizard on selected SOLs across multiple SOs."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order1 = model_order.create(
             {
@@ -380,9 +371,7 @@ class TestSaleStock(TestSaleCommon):
     def test_04_sale_multi_delivery(self):
         """Pickings split by date_planned."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order = model_order.create(
             {
@@ -466,9 +455,7 @@ class TestSaleStock(TestSaleCommon):
     def test_05_sale_single_picking(self):
         """Wizard on all SOLs of same SO => single picking."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order = model_order.create(
             {
@@ -512,9 +499,7 @@ class TestSaleStock(TestSaleCommon):
     def test_06_sale_multi_carrier(self):
         """Different carrier => different picking. Same carrier => reuse picking."""
         model_order = (
-            self.env["sale.order"]
-            .with_user(self.user_demo)
-            .with_company(self.company)
+            self.env["sale.order"].with_user(self.user_demo).with_company(self.company)
         )
         order = model_order.create(
             {
