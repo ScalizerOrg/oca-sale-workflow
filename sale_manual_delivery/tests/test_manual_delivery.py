@@ -3,9 +3,10 @@ import logging
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
-from odoo.addons.sale.tests.common import TestSaleCommon
 from odoo.exceptions import UserError
 from odoo.tests import tagged
+
+from odoo.addons.sale.tests.common import TestSaleCommon
 
 _logger = logging.getLogger(__name__)
 
@@ -354,17 +355,21 @@ class TestSaleStock(TestSaleCommon):
         wizard = self._manual_delivery_wizard(some_lines)
         self.assertEqual(sum(wizard.line_ids.mapped("quantity")), 4.0)
         wizard.confirm()
-        order3.flush_recordset()
+        order3.flush_recordset(["picking_ids"])
         self.assertEqual(len(order3.picking_ids), 1)
         self.assertEqual(len(order3.picking_ids.move_ids), 1)
         self.assertFalse(order2.picking_ids)
 
-        undelivered = self.env["sale.order.line"].sudo().search(
-            [
-                ("qty_to_procure", ">", 0),
-                ("state", "=", "sale"),
-                ("id", "in", all_lines.ids),
-            ]
+        undelivered = (
+            self.env["sale.order.line"]
+            .sudo()
+            .search(
+                [
+                    ("qty_to_procure", ">", 0),
+                    ("state", "=", "sale"),
+                    ("id", "in", all_lines.ids),
+                ]
+            )
         )
         self.assertEqual(undelivered, order2.order_line)
 
