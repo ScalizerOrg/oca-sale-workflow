@@ -1,17 +1,19 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import unittest
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
-
-from odoo.exceptions import UserError
-
 from odoo.addons.sale.tests.common import TestSaleCommon
+from odoo.exceptions import UserError
+from odoo.tests import loaded_demo_data
 
 
 class TestSaleStock(TestSaleCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        if not loaded_demo_data(cls.env):
+            raise unittest.SkipTest('Needs demo data to be able to run tests')
         cls.partner = cls.partner_a
         cls.product = cls.env.ref("product.product_delivery_01")
         cls.product2 = cls.env.ref("product.product_delivery_02")
