@@ -1,42 +1,118 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-import unittest
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
-from odoo.addons.sale.tests.common import TestSaleCommon
+
+from odoo import fields
 from odoo.exceptions import UserError
-from odoo.tests import loaded_demo_data
+from odoo.tests import tagged
+from odoo.addons.sale.tests.common import TestSaleCommon
 
 
+@tagged("post_install", "-at_install")
 class TestSaleStock(TestSaleCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        if not loaded_demo_data(cls.env):
-            raise unittest.SkipTest("Needs demo data to be able to run tests")
-        cls.partner = cls.env.ref("base.res_partner_1")
-        cls.product = cls.env.ref("product.product_delivery_01")
-        cls.product2 = cls.env.ref("product.product_delivery_02")
-        cls.product3 = cls.env.ref("product.product_order_01")
-        cls.carrier1 = cls.env.ref("delivery.delivery_carrier")
-        cls.carrier2 = cls.env.ref("delivery.delivery_local_delivery")
+
+        # Use stable partner from TestSaleCommon (no demo data dependency)
+        cls.partner = cls.partner_a
+
+        # Stock location
         cls.stock_location = cls.env.ref("stock.stock_location_stock")
-        cls.env["stock.quant"]._update_available_quantity(
-            cls.product, cls.stock_location, 100
+
+        # Create storable products (don't rely on product demo xmlids)
+        cls.product = cls.env["product.product"].create(
+            {
+                "name": "Test Delivery Product 1",
+                "type": "product",
+                "uom_id": cls.uom_unit.id,
+                "uom_po_id": cls.uom_unit.id,
+                "list_price": 100.0,
+            }
         )
-        cls.env.user_demo = cls.env.ref("base.user_demo")
+        cls.product2 = cls.env["product.product"].create(
+            {
+                "name": "Test Delivery Product 2",
+                "type": "product",
+                "uom_id": cls.uom_unit.id,
+                "uom_po_id": cls.uom_unit.id,
+                "list_price": 120.0,
+            }
+        )
+        cls.product3 = cls.env["product.product"].create(
+            {
+                "name": "Test Delivery Product 3",
+                "type": "product",
+                "uom_id": cls.uom_unit.id,
+                "uom_po_id": cls.uom_unit.id,
+                "list_price": 90.0,
+            }
+        )
+
+        # Put stock
+        cls.env["stock.quant"]._update_available_quantity(cls.product, cls.stock_location, 100)
+        cls.env["stock.quant"]._update_available_quantity(cls.product2, cls.stock_location, 100)
+        cls.env["stock.quant"]._update_available_quantity(cls.product3, cls.stock_location, 100)
+
+        # Create a basic salesman user (avoid base.user_demo dependency)
+        cls.user_demo = cls.env["res.users"].create(
+            {
+                "name": "Demo Sales User",
+                "login": "demo_sales_user",
+                "email": "demo_sales_user@example.com",
+                "groups_id": [
+                    (6, 0, [
+                        cls.env.ref("base.group_user").id,
+                        cls.env.ref("sales_team.group_sale_salesman").id,
+                    ])
+                ],
+                "company_id": cls.env.company.id,
+                "company_ids": [(6, 0, cls.env.company.ids)],
+            }
+        )
+
+        # Create delivery carriers (avoid delivery xmlids)
+        delivery_product = cls.env["product.product"].create(
+            {
+                "name": "Delivery Service",
+                "type": "service",
+                "uom_id": cls.uom_unit.id,
+                "uom_po_id": cls.uom_unit.id,
+                "list_price": 10.0,
+            }
+        )
+        cls.carrier1 = cls.env["delivery.carrier"].create(
+            {
+                "name": "Carrier Fixed 1",
+                "delivery_type": "fixed",
+                "fixed_price": 10.0,
+                "product_id": delivery_product.id,
+            }
+        )
+        cls.carrier2 = cls.env["delivery.carrier"].create(
+            {
+                "name": "Carrier Fixed 2",
+                "delivery_type": "fixed",
+                "fixed_price": 20.0,
+                "product_id": delivery_product.id,
+            }
+        )
 
     def _manual_delivery_wizard(self, records, vals=None):
-        if not vals:
-            vals = {}
+        vals = vals or {}
         return (
             self.env["manual.delivery"]
-            .with_context(
-                active_model=records._name,
-                active_ids=records.ids,
-            )
+            .with_context(active_model=records._name, active_ids=records.ids)
             .create(vals)
         )
+
+    def _set_done_qty(self, picking, qty):
+        """Odoo 19: stock.move.line uses `quantity` (computed/store), not qty_done."""
+        picking.action_assign()
+        picking.move_line_ids.write({"quantity": qty})
+        picking.button_validate()
+
 
     def test_00_sale_manual_delivery(self):
         """
