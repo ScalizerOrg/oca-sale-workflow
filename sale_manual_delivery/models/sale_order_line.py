@@ -99,7 +99,8 @@ class SaleOrderLine(models.Model):
             if not manual_qty:
                 continue
             remaining = line.product_uom_qty - line._get_qty_procurement(
-                previous_product_uom_qty)
+                previous_product_uom_qty
+            )
             if float_compare(manual_qty, remaining, precision_digits=precision) > 0:
                 manual_qty = remaining
             if not manual_qty:

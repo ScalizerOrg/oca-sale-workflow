@@ -34,4 +34,3 @@ class StockMove(models.Model):
                     ("scheduled_date", "=", manual_delivery.date_planned),
                 ]
         return domain
-
