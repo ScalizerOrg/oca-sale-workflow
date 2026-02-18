@@ -33,4 +33,7 @@ class StockMove(models.Model):
                 domain += [
                     ("scheduled_date", "=", manual_delivery.date_planned),
                 ]
+            domain += [
+                ("sale_id", "=", self.sale_line_id.order_id.id),
+            ]
         return domain
