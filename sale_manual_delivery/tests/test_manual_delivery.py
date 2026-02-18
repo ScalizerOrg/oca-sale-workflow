@@ -13,8 +13,8 @@ class TestSaleStock(TestSaleCommon):
     def setUpClass(cls):
         super().setUpClass()
         if not loaded_demo_data(cls.env):
-            raise unittest.SkipTest('Needs demo data to be able to run tests')
-        cls.partner = cls.partner_a
+            raise unittest.SkipTest("Needs demo data to be able to run tests")
+        cls.partner = cls.env.ref("base.res_partner_1")
         cls.product = cls.env.ref("product.product_delivery_01")
         cls.product2 = cls.env.ref("product.product_delivery_02")
         cls.product3 = cls.env.ref("product.product_order_01")
