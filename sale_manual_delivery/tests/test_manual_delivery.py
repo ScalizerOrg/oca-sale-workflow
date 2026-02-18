@@ -3,9 +3,9 @@ from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 
-from odoo import fields
 from odoo.exceptions import UserError
 from odoo.tests import tagged
+
 from odoo.addons.sale.tests.common import TestSaleCommon
 
 
@@ -15,19 +15,18 @@ class TestSaleStock(TestSaleCommon):
     def setUpClass(cls):
         super().setUpClass()
 
-        # Use stable partner from TestSaleCommon (no demo data dependency)
+        # Use stable partner from TestSaleCommon (no demo xmlid dependency)
         cls.partner = cls.partner_a
 
         # Stock location
         cls.stock_location = cls.env.ref("stock.stock_location_stock")
 
-        # Create storable products (don't rely on product demo xmlids)
+        # Create storable products (don't rely on demo products xmlids)
         cls.product = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 1",
                 "type": "product",
                 "uom_id": cls.uom_unit.id,
-                "uom_po_id": cls.uom_unit.id,
                 "list_price": 100.0,
             }
         )
@@ -36,7 +35,6 @@ class TestSaleStock(TestSaleCommon):
                 "name": "Test Delivery Product 2",
                 "type": "product",
                 "uom_id": cls.uom_unit.id,
-                "uom_po_id": cls.uom_unit.id,
                 "list_price": 120.0,
             }
         )
@@ -45,15 +43,20 @@ class TestSaleStock(TestSaleCommon):
                 "name": "Test Delivery Product 3",
                 "type": "product",
                 "uom_id": cls.uom_unit.id,
-                "uom_po_id": cls.uom_unit.id,
                 "list_price": 90.0,
             }
         )
 
         # Put stock
-        cls.env["stock.quant"]._update_available_quantity(cls.product, cls.stock_location, 100)
-        cls.env["stock.quant"]._update_available_quantity(cls.product2, cls.stock_location, 100)
-        cls.env["stock.quant"]._update_available_quantity(cls.product3, cls.stock_location, 100)
+        cls.env["stock.quant"]._update_available_quantity(
+            cls.product, cls.stock_location, 100
+        )
+        cls.env["stock.quant"]._update_available_quantity(
+            cls.product2, cls.stock_location, 100
+        )
+        cls.env["stock.quant"]._update_available_quantity(
+            cls.product3, cls.stock_location, 100
+        )
 
         # Create a basic salesman user (avoid base.user_demo dependency)
         cls.user_demo = cls.env["res.users"].create(
@@ -62,23 +65,26 @@ class TestSaleStock(TestSaleCommon):
                 "login": "demo_sales_user",
                 "email": "demo_sales_user@example.com",
                 "groups_id": [
-                    (6, 0, [
-                        cls.env.ref("base.group_user").id,
-                        cls.env.ref("sales_team.group_sale_salesman").id,
-                    ])
+                    (
+                        6,
+                        0,
+                        [
+                            cls.env.ref("base.group_user").id,
+                            cls.env.ref("sales_team.group_sale_salesman").id,
+                        ],
+                    )
                 ],
                 "company_id": cls.env.company.id,
                 "company_ids": [(6, 0, cls.env.company.ids)],
             }
         )
 
-        # Create delivery carriers (avoid delivery xmlids)
+        # Create 2 fixed carriers (avoid delivery demo xmlids)
         delivery_product = cls.env["product.product"].create(
             {
                 "name": "Delivery Service",
                 "type": "service",
                 "uom_id": cls.uom_unit.id,
-                "uom_po_id": cls.uom_unit.id,
                 "list_price": 10.0,
             }
         )
@@ -107,18 +113,14 @@ class TestSaleStock(TestSaleCommon):
             .create(vals)
         )
 
-    def _set_done_qty(self, picking, qty):
-        """Odoo 19: stock.move.line uses `quantity` (computed/store), not qty_done."""
+    def _deliver_qty(self, picking, qty):
         picking.action_assign()
         picking.move_line_ids.write({"quantity": qty})
         picking.button_validate()
 
-
     def test_00_sale_manual_delivery(self):
-        """
-        Test SO's manual delivery; we do it with a user without admin rights
-        """
-        model_user_order = self.env["sale.order"].with_user(self.env.user_demo)
+        """Test SO's manual delivery with a non-admin user."""
+        model_user_order = self.env["sale.order"].with_user(self.user_demo)
         order = model_user_order.create(
             {
                 "partner_id": self.partner.id,
@@ -132,7 +134,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 5.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     )
@@ -140,41 +142,28 @@ class TestSaleStock(TestSaleCommon):
                 "manual_delivery": True,
             }
         )
-        # confirm our standard so, check the picking
         order.action_confirm()
         self.assertFalse(
             order.picking_ids,
             'No picking should be created for "manual delivery" orders',
         )
-        # Raise error when user try to modify sale order in confirmd stage.
+
         with self.assertRaises(UserError):
             order.write({"manual_delivery": False})
-        # open the manual delivery wizard
+
         action = order.action_manual_delivery_wizard()
         self.assertEqual(action["res_model"], "manual.delivery")
-        # create a manual delivery for all ordered quantity
+
         self._manual_delivery_wizard(order).confirm()
-        # check picking is created
-        self.assertTrue(
-            order.picking_ids,
-            'Picking should be created after "manual delivery" wizard call',
-        )
-        # create a manual delivery, nothing left to ship
+        self.assertTrue(order.picking_ids)
+
         wizard = self._manual_delivery_wizard(order)
-        self.assertFalse(
-            wizard.line_ids,
-            "After picking creation for all products, "
-            "no lines should be left in the wizard",
-        )
+        self.assertFalse(wizard.line_ids)
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids), 1.0, "Picking number should remain 1.0"
-        )
+        self.assertEqual(len(order.picking_ids), 1)
 
     def test_01_sale_standard_delivery(self):
-        """
-        Test SO's standard delivery
-        """
+        """Test SO's standard delivery."""
         order = self.env["sale.order"].create(
             {
                 "partner_id": self.partner.id,
@@ -188,7 +177,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 5.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     )
@@ -196,25 +185,17 @@ class TestSaleStock(TestSaleCommon):
                 "manual_delivery": False,
             }
         )
-        # confirm our standard so, check the picking
         order.action_confirm()
-        self.assertTrue(
-            order.picking_ids,
-            'Picking should be created for "standard delivery" orders',
-        )
-        # deliver completely
+        self.assertTrue(order.picking_ids)
+
         pick = order.picking_ids
-        pick.action_assign()
-        pick.move_line_ids.write({"quantity": 5})
-        pick.button_validate()
-        # Check quantity delivered
+        self._deliver_qty(pick, 5)
+
         del_qty = sum(sol.qty_delivered for sol in order.order_line)
-        self.assertEqual(del_qty, 5.0, "Delivery quantity doesn't match")
+        self.assertEqual(del_qty, 5.0)
 
     def test_02_sale_various_manual_delivery(self):
-        """
-        Test SO's various manual delivery
-        """
+        """Test partial manual deliveries, no-op deliveries, and over-delivery."""
         order = self.env["sale.order"].create(
             {
                 "partner_id": self.partner.id,
@@ -228,7 +209,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 5.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     )
@@ -236,62 +217,37 @@ class TestSaleStock(TestSaleCommon):
                 "manual_delivery": True,
             }
         )
-        # confirm our standard so, check the picking
         order.action_confirm()
-        self.assertFalse(
-            order.picking_ids,
-            'No picking should be created for "manual delivery" orders',
-        )
-        # create a manual delivery for part of ordered quantity
+        self.assertFalse(order.picking_ids)
+
         wizard = self._manual_delivery_wizard(order)
         wizard.line_ids.write({"quantity": 2.0})
         wizard.confirm()
-        # checking has_pending_delivery for Create Delivery button to appear
         self.assertTrue(order.has_pending_delivery)
-        # check picking is created
-        self.assertEqual(
-            len(order.picking_ids),
-            1,
-            'Picking should be created after "manual delivery" wizard call',
-        )
-        # deliver completely
-        pick = order.picking_ids
-        pick.action_assign()
-        pick.move_line_ids.write({"quantity": 2})
-        pick.button_validate()
-        # Check quantity delivered
+        self.assertEqual(len(order.picking_ids), 1)
+
+        self._deliver_qty(order.picking_ids, 2)
         del_qty = sum(sol.qty_delivered for sol in order.order_line)
-        self.assertEqual(del_qty, 2.0, "Delivery quantity doesn't match")
-        # a manual delivery with qty 0 shouldn't do anything
+        self.assertEqual(del_qty, 2.0)
+
         wizard = self._manual_delivery_wizard(order)
         wizard.line_ids.write({"quantity": 0.0})
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids),
-            1.0,
-            "No picking should've been created",
-        )
-        # try to create a manual delivery with more quantity than the ordered
+        self.assertEqual(len(order.picking_ids), 1)
+
         wizard = self._manual_delivery_wizard(order)
         with self.assertRaises(UserError):
             wizard.line_ids.write({"quantity": 10.0})
             wizard.confirm()
-        # create a manual delivery, 3.0 left to ship
+
         wizard = self._manual_delivery_wizard(order)
         wizard.line_ids.write({"quantity": 3.0})
         wizard.confirm()
-        # checking has_pending_delivery for Create Delivery button to hide
         self.assertFalse(order.has_pending_delivery)
-        self.assertEqual(
-            len(order.picking_ids),
-            2.0,
-            "Picking number doesn't match",
-        )
+        self.assertEqual(len(order.picking_ids), 2)
 
     def test_03_sale_selected_lines(self):
-        """
-        Test SO's various manual delivery
-        """
+        """Wizard on selected SOLs across multiple SOs."""
         order1 = self.env["sale.order"].create(
             {
                 "partner_id": self.partner.id,
@@ -305,7 +261,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 1.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     )
@@ -326,7 +282,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product2.name,
                             "product_id": self.product2.id,
                             "product_uom_qty": 2.0,
-                            "product_uom": self.product2.uom_id.id,
+                            "product_uom_id": self.product2.uom_id.id,
                             "price_unit": self.product2.list_price,
                         },
                     )
@@ -345,9 +301,9 @@ class TestSaleStock(TestSaleCommon):
                         0,
                         {
                             "name": self.product3.name,
-                            "product_id": self.product.id,
+                            "product_id": self.product3.id,
                             "product_uom_qty": 3.0,
-                            "product_uom": self.product3.uom_id.id,
+                            "product_uom_id": self.product3.uom_id.id,
                             "price_unit": self.product3.list_price,
                         },
                     )
@@ -355,31 +311,22 @@ class TestSaleStock(TestSaleCommon):
                 "manual_delivery": True,
             }
         )
-        # confirm our standard so, check the picking
+
         order1.action_confirm()
         order2.action_confirm()
         order3.action_confirm()
+
         some_lines = order1.order_line | order3.order_line
         all_lines = order1.order_line | order2.order_line | order3.order_line
-        # create a manual delivery for part of ordered quantity
+
         wizard = self._manual_delivery_wizard(some_lines)
         self.assertEqual(sum(wizard.line_ids.mapped("quantity")), 4.0)
         wizard.confirm()
-        # check picking is created
-        self.assertTrue(
-            order3.picking_ids,
-            'Picking should be created after "manual delivery" wizard call',
-        )
-        self.assertEqual(
-            len(order3.picking_ids.move_ids),
-            1,
-            "Different sales orders should still create different pickings",
-        )
-        self.assertFalse(
-            order2.picking_ids,
-            'Picking should not be created after "manual delivery" wizard call',
-        )
-        # test action undelivered
+
+        self.assertTrue(order3.picking_ids)
+        self.assertEqual(len(order3.picking_ids.move_ids), 1)
+        self.assertFalse(order2.picking_ids)
+
         undelivered = self.env["sale.order.line"].search(
             [
                 ("qty_to_procure", ">", 0),
@@ -387,16 +334,10 @@ class TestSaleStock(TestSaleCommon):
                 ("id", "in", all_lines.ids),
             ]
         )
-        self.assertEqual(
-            undelivered,
-            order2.order_line,
-            "Bad pending qty to deliver filter",
-        )
+        self.assertEqual(undelivered, order2.order_line)
 
-    def test_03_sale_multi_delivery(self):
-        self.env["stock.quant"]._update_available_quantity(
-            self.product2, self.stock_location, 100
-        )
+    def test_04_sale_multi_delivery(self):
+        """Pickings split by date_planned."""
         order = self.env["sale.order"].create(
             {
                 "partner_id": self.partner.id,
@@ -410,7 +351,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 10.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     ),
@@ -421,7 +362,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product2.name,
                             "product_id": self.product2.id,
                             "product_uom_qty": 10.0,
-                            "product_uom": self.product2.uom_id.id,
+                            "product_uom_id": self.product2.uom_id.id,
                             "price_unit": self.product2.list_price,
                         },
                     ),
@@ -429,14 +370,9 @@ class TestSaleStock(TestSaleCommon):
                 "manual_delivery": True,
             }
         )
-
-        # confirm our standard so, check the picking
         order.action_confirm()
-        self.assertFalse(
-            order.picking_ids,
-            'No picking should be created for "manual delivery" orders',
-        )
-        # create a manual delivery for part of ordered quantity
+        self.assertFalse(order.picking_ids)
+
         date_now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         wizard = self._manual_delivery_wizard(
             order.order_line[0],
@@ -444,12 +380,8 @@ class TestSaleStock(TestSaleCommon):
         )
         wizard.line_ids.write({"quantity": 2.0})
         wizard.confirm()
-        # check picking is created
-        self.assertEqual(
-            len(order.picking_ids),
-            1,
-            'Picking should be created after "manual delivery" wizard call',
-        )
+
+        self.assertEqual(len(order.picking_ids), 1)
         first_picking = order.picking_ids
         self.assertEqual(
             first_picking.scheduled_date.replace(
@@ -457,7 +389,7 @@ class TestSaleStock(TestSaleCommon):
             ),
             date_now,
         )
-        # create a second manual delivery for next week
+
         date_next_week = date_now + relativedelta(weeks=1)
         wizard = self._manual_delivery_wizard(
             order.order_line[1],
@@ -465,12 +397,8 @@ class TestSaleStock(TestSaleCommon):
         )
         wizard.line_ids.write({"quantity": 3.0})
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids),
-            2,
-            "Sale Manual Delivery: second picking should be created after"
-            ' "manual delivery" wizard call with different date',
-        )
+
+        self.assertEqual(len(order.picking_ids), 2)
         second_picking = order.picking_ids - first_picking
         self.assertEqual(
             second_picking.scheduled_date.replace(
@@ -478,7 +406,7 @@ class TestSaleStock(TestSaleCommon):
             ),
             date_next_week,
         )
-        # create a third manual delivery for today (should be mixed with first)
+
         new_date_now = datetime.now()
         wizard = self._manual_delivery_wizard(
             order.order_line[0],
@@ -486,21 +414,12 @@ class TestSaleStock(TestSaleCommon):
         )
         wizard.line_ids.write({"quantity": 5.0})
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids),
-            2,
-            "Sale Manual Delivery: new moves should be merged in first picking"
-            ' after "manual delivery" wizard call with same date',
-        )
-        self.assertEqual(
-            sum(first_picking.mapped("move_ids.product_uom_qty")),
-            7,
-        )
 
-    def test_04_sale_single_picking(self):
-        """
-        Test SO's various manual delivery
-        """
+        self.assertEqual(len(order.picking_ids), 2)
+        self.assertEqual(sum(first_picking.mapped("move_ids.product_uom_qty")), 7)
+
+    def test_05_sale_single_picking(self):
+        """Wizard on all SOLs of same SO => single picking."""
         order = self.env["sale.order"].create(
             {
                 "partner_id": self.partner.id,
@@ -514,7 +433,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 1.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     ),
@@ -525,7 +444,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product2.name,
                             "product_id": self.product2.id,
                             "product_uom_qty": 2.0,
-                            "product_uom": self.product2.uom_id.id,
+                            "product_uom_id": self.product2.uom_id.id,
                             "price_unit": self.product2.list_price,
                         },
                     ),
@@ -533,16 +452,13 @@ class TestSaleStock(TestSaleCommon):
                 "manual_delivery": True,
             }
         )
-        # confirm our standard so, check the picking
         order.action_confirm()
-        # create a manual delivery for part of ordered quantity
         wizard = self._manual_delivery_wizard(order.order_line)
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids), 1.0, "Delivery: picking number should be 1.0"
-        )
+        self.assertEqual(len(order.picking_ids), 1)
 
-    def test_05_sale_multi_carrier(self):
+    def test_06_sale_multi_carrier(self):
+        """Different carrier => different picking. Same carrier => reuse picking."""
         order = self.env["sale.order"].create(
             {
                 "partner_id": self.partner.id,
@@ -556,7 +472,7 @@ class TestSaleStock(TestSaleCommon):
                             "name": self.product.name,
                             "product_id": self.product.id,
                             "product_uom_qty": 10.0,
-                            "product_uom": self.product.uom_id.id,
+                            "product_uom_id": self.product.uom_id.id,
                             "price_unit": self.product.list_price,
                         },
                     ),
@@ -565,45 +481,26 @@ class TestSaleStock(TestSaleCommon):
                 "carrier_id": self.carrier1.id,
             }
         )
-        # confirm our standard so, check the picking
         order.action_confirm()
-        # create a manual delivery for part of ordered quantity
+
         wizard = self._manual_delivery_wizard(order, {"carrier_id": self.carrier1.id})
         wizard.line_ids.write({"quantity": 2.0})
         wizard.confirm()
-        # check picking is created
-        self.assertEqual(
-            len(order.picking_ids),
-            1,
-            'Picking should be created after "manual delivery" wizard call',
-        )
+
+        self.assertEqual(len(order.picking_ids), 1)
         first_picking = order.picking_ids
-        self.assertEqual(
-            first_picking.carrier_id,
-            order.carrier_id,
-            "Picking carrier should be the one in the order",
-        )
-        # create a second manual delivery with a different carrier
+        self.assertEqual(first_picking.carrier_id, order.carrier_id)
+
         wizard = self._manual_delivery_wizard(order, {"carrier_id": self.carrier2.id})
         wizard.line_ids.write({"quantity": 2.0})
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids),
-            2,
-            "A different picking should've been created, as the carrier is different",
-        )
+
+        self.assertEqual(len(order.picking_ids), 2)
         second_picking = order.picking_ids - first_picking
-        self.assertEqual(
-            second_picking.carrier_id,
-            self.carrier2,
-            "Picking carrier should be the one selected",
-        )
-        # create a third manual delivery for (should be mixed with first)
+        self.assertEqual(second_picking.carrier_id, self.carrier2)
+
         wizard = self._manual_delivery_wizard(order, {"carrier_id": self.carrier1.id})
         wizard.line_ids.write({"quantity": 2.0})
         wizard.confirm()
-        self.assertEqual(
-            len(order.picking_ids),
-            2,
-            "The first picking should be re-used",
-        )
+
+        self.assertEqual(len(order.picking_ids), 2)
