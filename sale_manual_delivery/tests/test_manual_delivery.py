@@ -66,7 +66,7 @@ class TestSaleStock(TestSaleCommon):
                 "name": "Demo Sales User",
                 "login": "demo_sales_user",
                 "email": "demo_sales_user@example.com",
-                "groups_id": [
+                "group_ids": [
                     (
                         6,
                         0,
