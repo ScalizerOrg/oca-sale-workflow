@@ -12,7 +12,7 @@ class TestSaleStock(TestSaleCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.partner = cls.env.ref("base.res_partner_1")
+        cls.partner = cls.partner_a
         cls.product = cls.env.ref("product.product_delivery_01")
         cls.product2 = cls.env.ref("product.product_delivery_02")
         cls.product3 = cls.env.ref("product.product_order_01")
