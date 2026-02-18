@@ -33,7 +33,6 @@ class SaleOrderLine(models.Model):
         "move_ids.product_uom",
         "move_ids.location_id",
         "move_ids.location_dest_id",
-        "move_ids.location_dest_id.usage",
     )
     def _compute_qty_procured(self):
         """

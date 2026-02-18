@@ -7,7 +7,8 @@ from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.sale.tests.common import TestSaleCommon
-
+import logging
+_logger = logging.getLogger(__name__)
 
 @tagged("post_install", "-at_install")
 class TestSaleStock(TestSaleCommon):
@@ -17,6 +18,9 @@ class TestSaleStock(TestSaleCommon):
 
         # Use stable partner from TestSaleCommon (no demo xmlid dependency)
         cls.partner = cls.partner_a
+        cls.warehouse = cls.env.ref('stock.warehouse0')
+        cls.company = cls.env.ref('base.main_company')
+
 
         # Stock location
         cls.stock_location = cls.env.ref("stock.stock_location_stock")
@@ -24,17 +28,19 @@ class TestSaleStock(TestSaleCommon):
         cls.product = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 1",
-                "type": "consu",
                 "is_storable": True,
-                "uom_id": cls.uom_unit.id,
+
                 "list_price": 100.0,
             }
+        )
+        cls.env["stock.quant"]._update_available_quantity(
+            cls.product, cls.stock_location, 100
         )
         cls.product2 = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 2",
-                "type": "consu",
                 "is_storable": True,
+                "type": "consu",
                 "uom_id": cls.uom_unit.id,
                 "list_price": 120.0,
             }
@@ -42,17 +48,16 @@ class TestSaleStock(TestSaleCommon):
         cls.product3 = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 3",
-                "type": "consu",
                 "is_storable": True,
+                "type": "consu",
                 "uom_id": cls.uom_unit.id,
                 "list_price": 90.0,
+                "tracking": "none",
             }
         )
 
-        # Put stock
-        cls.env["stock.quant"]._update_available_quantity(
-            cls.product, cls.stock_location, 100
-        )
+        # Put sto
+
         cls.env["stock.quant"]._update_available_quantity(
             cls.product2, cls.stock_location, 100
         )
@@ -60,7 +65,6 @@ class TestSaleStock(TestSaleCommon):
             cls.product3, cls.stock_location, 100
         )
 
-        # Create a basic salesman user (avoid base.user_demo dependency)
         cls.user_demo = cls.env["res.users"].create(
             {
                 "name": "Demo Sales User",
@@ -73,15 +77,15 @@ class TestSaleStock(TestSaleCommon):
                         [
                             cls.env.ref("base.group_user").id,
                             cls.env.ref("sales_team.group_sale_salesman").id,
+                            cls.env.ref("stock.group_stock_user").id,
                         ],
                     )
                 ],
-                "company_id": cls.env.company.id,
-                "company_ids": [(6, 0, cls.env.company.ids)],
+                "company_id": cls.company.id,
+                "company_ids": [(6, 0, cls.company.ids)],
             }
         )
 
-        # Create 2 fixed carriers (avoid delivery demo xmlids)
         delivery_product = cls.env["product.product"].create(
             {
                 "name": "Delivery Service",
@@ -107,11 +111,17 @@ class TestSaleStock(TestSaleCommon):
             }
         )
 
+
     def _manual_delivery_wizard(self, records, vals=None):
         vals = vals or {}
         return (
             self.env["manual.delivery"]
-            .with_context(active_model=records._name, active_ids=records.ids)
+            .with_user(records.env.user)
+            .with_company(records.env.company)
+            .with_context(
+                active_model=records._name,
+                active_ids=records.ids,
+            )
             .create(vals)
         )
 
@@ -122,12 +132,17 @@ class TestSaleStock(TestSaleCommon):
 
     def test_00_sale_manual_delivery(self):
         """Test SO's manual delivery with a non-admin user."""
-        model_user_order = self.env["sale.order"].with_user(self.user_demo)
-        order = model_user_order.create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -142,6 +157,7 @@ class TestSaleStock(TestSaleCommon):
                     )
                 ],
                 "manual_delivery": True,
+                "warehouse_id": self.warehouse.id,
             }
         )
         order.action_confirm()
@@ -166,11 +182,17 @@ class TestSaleStock(TestSaleCommon):
 
     def test_01_sale_standard_delivery(self):
         """Test SO's standard delivery."""
-        order = self.env["sale.order"].create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -185,6 +207,7 @@ class TestSaleStock(TestSaleCommon):
                     )
                 ],
                 "manual_delivery": False,
+                "warehouse_id": self.warehouse.id,
             }
         )
         order.action_confirm()
@@ -198,7 +221,12 @@ class TestSaleStock(TestSaleCommon):
 
     def test_02_sale_various_manual_delivery(self):
         """Test partial manual deliveries, no-op deliveries, and over-delivery."""
-        order = self.env["sale.order"].create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
@@ -250,11 +278,17 @@ class TestSaleStock(TestSaleCommon):
 
     def test_03_sale_selected_lines(self):
         """Wizard on selected SOLs across multiple SOs."""
-        order1 = self.env["sale.order"].create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order1 = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -268,14 +302,16 @@ class TestSaleStock(TestSaleCommon):
                         },
                     )
                 ],
+                "warehouse_id": self.warehouse.id,
                 "manual_delivery": True,
             }
         )
-        order2 = self.env["sale.order"].create(
+        order2 = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -290,13 +326,15 @@ class TestSaleStock(TestSaleCommon):
                     )
                 ],
                 "manual_delivery": True,
+                "warehouse_id": self.warehouse.id,
             }
         )
-        order3 = self.env["sale.order"].create(
+        order3 = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -310,6 +348,7 @@ class TestSaleStock(TestSaleCommon):
                         },
                     )
                 ],
+                "warehouse_id": self.warehouse.id,
                 "manual_delivery": True,
             }
         )
@@ -329,7 +368,7 @@ class TestSaleStock(TestSaleCommon):
         self.assertEqual(len(order3.picking_ids.move_ids), 1)
         self.assertFalse(order2.picking_ids)
 
-        undelivered = self.env["sale.order.line"].search(
+        undelivered = self.env["sale.order.line"].sudo().search(
             [
                 ("qty_to_procure", ">", 0),
                 ("state", "=", "sale"),
@@ -340,11 +379,17 @@ class TestSaleStock(TestSaleCommon):
 
     def test_04_sale_multi_delivery(self):
         """Pickings split by date_planned."""
-        order = self.env["sale.order"].create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -370,6 +415,7 @@ class TestSaleStock(TestSaleCommon):
                     ),
                 ],
                 "manual_delivery": True,
+                "warehouse_id": self.warehouse.id,
             }
         )
         order.action_confirm()
@@ -399,7 +445,6 @@ class TestSaleStock(TestSaleCommon):
         )
         wizard.line_ids.write({"quantity": 3.0})
         wizard.confirm()
-
         self.assertEqual(len(order.picking_ids), 2)
         second_picking = order.picking_ids - first_picking
         self.assertEqual(
@@ -408,11 +453,9 @@ class TestSaleStock(TestSaleCommon):
             ),
             date_next_week,
         )
-
-        new_date_now = datetime.now()
         wizard = self._manual_delivery_wizard(
             order.order_line[0],
-            {"carrier_id": order.carrier_id.id, "date_planned": new_date_now},
+            {"carrier_id": order.carrier_id.id, "date_planned": date_now},
         )
         wizard.line_ids.write({"quantity": 5.0})
         wizard.confirm()
@@ -422,11 +465,17 @@ class TestSaleStock(TestSaleCommon):
 
     def test_05_sale_single_picking(self):
         """Wizard on all SOLs of same SO => single picking."""
-        order = self.env["sale.order"].create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -452,6 +501,7 @@ class TestSaleStock(TestSaleCommon):
                     ),
                 ],
                 "manual_delivery": True,
+                "warehouse_id": self.warehouse.id,
             }
         )
         order.action_confirm()
@@ -461,11 +511,17 @@ class TestSaleStock(TestSaleCommon):
 
     def test_06_sale_multi_carrier(self):
         """Different carrier => different picking. Same carrier => reuse picking."""
-        order = self.env["sale.order"].create(
+        model_order = (
+            self.env["sale.order"]
+            .with_user(self.user_demo)
+            .with_company(self.company)
+        )
+        order = model_order.create(
             {
                 "partner_id": self.partner.id,
                 "partner_invoice_id": self.partner.id,
                 "partner_shipping_id": self.partner.id,
+                "company_id": self.company.id,
                 "order_line": [
                     (
                         0,
@@ -481,6 +537,7 @@ class TestSaleStock(TestSaleCommon):
                 ],
                 "manual_delivery": True,
                 "carrier_id": self.carrier1.id,
+                "warehouse_id": self.warehouse.id,
             }
         )
         order.action_confirm()

@@ -29,7 +29,7 @@ class StockMove(models.Model):
                 domain += [
                     ("carrier_id", "=", manual_delivery.carrier_id.id),
                 ]
-            if manual_delivery.carrier_id:
+            if manual_delivery.date_planned:
                 domain += [
                     ("scheduled_date", "=", manual_delivery.date_planned),
                 ]
