@@ -1,0 +1,266 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* sale_manual_delivery
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-18 13:27+0000\n"
+"PO-Revision-Date: 2026-02-18 13:27+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.manual_delivery_wizard_form
+msgid "Cancel"
+msgstr "Annuler"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__commercial_partner_id
+msgid "Commercial Partner"
+msgstr "Partenaire commercial"
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.manual_delivery_wizard_form
+msgid "Confirm"
+msgstr "Confirmer"
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.view_order_form
+msgid "Create Delivery"
+msgstr "Créer une livraison"
+
+#. module: sale_manual_delivery
+#: model:ir.actions.act_window,name:sale_manual_delivery.action_wizard_manual_delivery
+#: model:ir.actions.act_window,name:sale_manual_delivery.action_wizard_manual_delivery_line
+msgid "Create Manual Delivery"
+msgstr "Créer une livraison manuelle"
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.manual_delivery_wizard_form
+msgid "Create Manually Delivery"
+msgstr "Créer une livraison manuellement"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__create_uid
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__create_date
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__date_planned
+msgid "Date Planned"
+msgstr "Date prévue"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__partner_id
+msgid "Delivery Address"
+msgstr "Adresse de livraison"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__carrier_id
+msgid "Delivery Method"
+msgstr "Mode de livraison"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order__has_pending_delivery
+msgid "Delivery pending?"
+msgstr "Livraison en attente?"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__name
+msgid "Description"
+msgstr "Description"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_crm_team__display_name
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__display_name
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__display_name
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order__display_name
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order_line__display_name
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_stock_move__display_name
+msgid "Display Name"
+msgstr "Nom d'affichage"
+
+#. module: sale_manual_delivery
+#: model_terms:ir.actions.act_window,help:sale_manual_delivery.action_order_line_delivery_tree
+msgid "Here is a list of each sales order line to be invoiced."
+msgstr "Voici la liste de chaque ligne de commande client à facturer."
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_crm_team__id
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__id
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__id
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order__id
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order_line__id
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_stock_move__id
+msgid "ID"
+msgstr ""
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,help:sale_manual_delivery.field_crm_team__manual_delivery
+#: model:ir.model.fields,help:sale_manual_delivery.field_sale_order__manual_delivery
+msgid ""
+"If enabled, the deliveries are not created at SO confirmation. You need to "
+"use the Create Delivery button in order to reserve and ship the goods."
+msgstr ""
+"Si activé, les livraisons ne sont pas créées lors de la confirmation de la commande client. "
+"Vous devez utiliser le bouton « Créer une livraison » afin de réserver et d’expédier les marchandises."
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__write_uid
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__write_date
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,help:sale_manual_delivery.field_manual_delivery__route_id
+msgid "Leave it blank to use the same route that is in the sale line"
+msgstr "Laissez ce champ vide pour utiliser la même route que celle définie sur la ligne de vente."
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__line_ids
+msgid "Lines to validate"
+msgstr "Lignes à valider"
+
+#. module: sale_manual_delivery
+#: model:ir.model,name:sale_manual_delivery.model_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_crm_team__manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order__manual_delivery
+msgid "Manual Delivery"
+msgstr "Livraison manuelle"
+
+#. module: sale_manual_delivery
+#: model:ir.model,name:sale_manual_delivery.model_manual_delivery_line
+msgid "Manual Delivery Line"
+msgstr "Ligne de livraison manuelle"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__qty_ordered
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.manual_delivery_wizard_form
+msgid "Ordered"
+msgstr "Commandé"
+
+#. module: sale_manual_delivery
+#. odoo-python
+#: code:addons/sale_manual_delivery/wizard/manual_delivery.py:0
+msgid "Please select one partner at a time"
+msgstr "Veuillez sélectionner un seul partenaire à la fois."
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.manual_delivery_wizard_form
+msgid "Procured"
+msgstr "Approvisionné"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__product_id
+msgid "Product"
+msgstr "Produit"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__quantity
+msgid "Quantity"
+msgstr "Quantité"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__qty_procured
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order_line__qty_procured
+msgid "Quantity Procured"
+msgstr "Quantité approvisionnée"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,help:sale_manual_delivery.field_manual_delivery_line__qty_procured
+#: model:ir.model.fields,help:sale_manual_delivery.field_sale_order_line__qty_procured
+msgid "Quantity already planned or shipped (stock movements already created)"
+msgstr "Quantité déjà planifiée ou expédiée (mouvements de stock déjà créés)"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,help:sale_manual_delivery.field_manual_delivery_line__qty_ordered
+msgid "Quantity ordered in the related Sale Order"
+msgstr "Quantité commandée dans la commande client associée"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_sale_order_line__qty_to_procure
+msgid "Quantity to Procure"
+msgstr "Quantité à approvisionner"
+
+#. module: sale_manual_delivery
+#: model:ir.actions.act_window,name:sale_manual_delivery.action_order_line_delivery_tree
+#: model:ir.ui.menu,name:sale_manual_delivery.menu_delivery_sales_order_lines
+msgid "Sale Lines to Deliver"
+msgstr "Lignes de vente à livrer"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__order_line_id
+msgid "Sale Order Line"
+msgstr "Ligne de commande client"
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.view_sales_order_undelivered_line_filter
+msgid ""
+"Sales Order Lines that are confirmed, done or in exception state and no "
+"delivery is created to satisfy them"
+msgstr ""
+"Lignes de commande client confirmées, terminées ou en exception, pour lesquelles aucune livraison n’a été créée."
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.view_sales_order_undelivered_line_filter
+msgid "Search Undelivered Lines"
+msgstr "Rechercher les lignes non livrées"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,help:sale_manual_delivery.field_sale_order_line__qty_to_procure
+msgid "There is Pending qty to add to a delivery"
+msgstr "Il reste une quantité en attente à ajouter à une livraison."
+
+#. module: sale_manual_delivery
+#: model_terms:ir.ui.view,arch_db:sale_manual_delivery.view_sales_order_undelivered_line_filter
+msgid "Unplanned delivery"
+msgstr "Livraison non planifiée"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery__route_id
+msgid "Use specific Route"
+msgstr "Utiliser une route spécifique"
+
+#. module: sale_manual_delivery
+#: model:ir.model.fields,field_description:sale_manual_delivery.field_manual_delivery_line__manual_delivery_id
+msgid "Wizard"
+msgstr "Assistant"
+
+#. module: sale_manual_delivery
+#. odoo-python
+#: code:addons/sale_manual_delivery/wizard/manual_delivery_line.py:0
+msgid ""
+"You can not deliver more than the remaining quantity. If you need to do so, "
+"please edit the sale order first."
+msgstr ""
+"Vous ne pouvez pas livrer plus que la quantité restante. Si vous devez le faire, "
+"veuillez d’abord modifier la commande client."
+
+#. module: sale_manual_delivery
+#. odoo-python
+#: code:addons/sale_manual_delivery/models/sale_order.py:0
+msgid ""
+"You can only change to/from manual delivery in a quote, not a confirmed "
+"order"
+msgstr ""
+"Vous ne pouvez activer/désactiver la livraison manuelle que sur un devis, "
+"pas sur une commande confirmée."

@@ -3,7 +3,7 @@
 # Copyright 2026 Scalizer
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -12,8 +12,8 @@ class SaleOrder(models.Model):
 
     manual_delivery = fields.Boolean(
         help="If enabled, the deliveries are not created at SO confirmation. "
-        "You need to use the Create Delivery button in order to reserve "
-        "and ship the goods.",
+             "You need to use the Create Delivery button in order to reserve "
+             "and ship the goods.",
     )
 
     has_pending_delivery = fields.Boolean(
@@ -43,7 +43,7 @@ class SaleOrder(models.Model):
     def _check_manual_delivery(self):
         if any(rec.state not in ["draft", "sent"] for rec in self):
             raise UserError(
-                _(
+                self.env._(
                     "You can only change to/from manual delivery"
                     " in a quote, not a confirmed order"
                 )
