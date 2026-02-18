@@ -25,6 +25,7 @@ class TestSaleStock(TestSaleCommon):
             {
                 "name": "Test Delivery Product 1",
                 "type": "consu",
+                "is_storable": True,
                 "uom_id": cls.uom_unit.id,
                 "list_price": 100.0,
             }
@@ -33,6 +34,7 @@ class TestSaleStock(TestSaleCommon):
             {
                 "name": "Test Delivery Product 2",
                 "type": "consu",
+                "is_storable": True,
                 "uom_id": cls.uom_unit.id,
                 "list_price": 120.0,
             }
@@ -41,6 +43,7 @@ class TestSaleStock(TestSaleCommon):
             {
                 "name": "Test Delivery Product 3",
                 "type": "consu",
+                "is_storable": True,
                 "uom_id": cls.uom_unit.id,
                 "list_price": 90.0,
             }
