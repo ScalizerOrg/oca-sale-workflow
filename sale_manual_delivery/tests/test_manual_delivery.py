@@ -21,11 +21,10 @@ class TestSaleStock(TestSaleCommon):
         # Stock location
         cls.stock_location = cls.env.ref("stock.stock_location_stock")
 
-        # Create storable products (don't rely on demo products xmlids)
         cls.product = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 1",
-                "type": "product",
+                "type": "consu",
                 "uom_id": cls.uom_unit.id,
                 "list_price": 100.0,
             }
@@ -33,7 +32,7 @@ class TestSaleStock(TestSaleCommon):
         cls.product2 = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 2",
-                "type": "product",
+                "type": "consu",
                 "uom_id": cls.uom_unit.id,
                 "list_price": 120.0,
             }
@@ -41,7 +40,7 @@ class TestSaleStock(TestSaleCommon):
         cls.product3 = cls.env["product.product"].create(
             {
                 "name": "Test Delivery Product 3",
-                "type": "product",
+                "type": "consu",
                 "uom_id": cls.uom_unit.id,
                 "list_price": 90.0,
             }
