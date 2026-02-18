@@ -12,7 +12,7 @@ def pre_init_hook(env):
         COMMENT ON COLUMN sale_order_line.qty_to_procure IS 'Quantity to Procure"';
         """
     )
-    precision_digits = env['decimal.precision'].precision_get('Product Unit')
+    precision_digits = env["decimal.precision"].precision_get("Product Unit")
 
     cr.execute(
         """
@@ -68,5 +68,5 @@ group by sol.id, sm.product_uom, sol.product_uom_id
 ) as r
 where r.id = sol.id
     """,
-        {"precision_digits": precision_digits}
+        {"precision_digits": precision_digits},
     )

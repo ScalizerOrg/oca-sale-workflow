@@ -63,7 +63,8 @@ class SaleOrderLine(models.Model):
             if manual_delivery.date_planned:
                 res["date_planned"] = manual_delivery.date_planned
                 date_deadline = manual_delivery.date_planned + timedelta(
-                    days=self.order_id.company_id.security_lead)
+                    days=self.order_id.company_id.security_lead
+                )
                 res["date_deadline"] = date_deadline
             if manual_delivery.route_id:
                 res["route_ids"] = manual_delivery.route_id
@@ -83,7 +84,11 @@ class SaleOrderLine(models.Model):
         procurements = []
         for line in self:
             line = line.with_company(line.company_id)
-            if line.state != "sale" or line.order_id.locked or line.product_id.type != "consu":
+            if (
+                line.state != "sale"
+                or line.order_id.locked
+                or line.product_id.type != "consu"
+            ):
                 continue
 
             # Qty comes from the manual delivery wizard
@@ -102,7 +107,7 @@ class SaleOrderLine(models.Model):
 
             references = line.order_id.stock_reference_ids
             if not references:
-                self.env['stock.reference'].create(line._prepare_reference_vals())
+                self.env["stock.reference"].create(line._prepare_reference_vals())
 
             values = line._prepare_procurement_values()
 
@@ -111,8 +116,9 @@ class SaleOrderLine(models.Model):
             product_qty, procurement_uom = line_uom._adjust_uom_quantities(
                 manual_qty, quant_uom
             )
-            procurements += line._create_procurements(product_qty, procurement_uom,
-                                                      values)
+            procurements += line._create_procurements(
+                product_qty, procurement_uom, values
+            )
 
         if procurements:
             self.env["stock.rule"].run(procurements)
