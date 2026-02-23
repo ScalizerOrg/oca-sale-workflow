@@ -3,8 +3,10 @@
 # Copyright 2026 Scalizer
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import models
 import logging
+
+from odoo import models
+
 _logger =logging.getLogger(__name__)
 
 
@@ -28,7 +30,7 @@ class StockMove(models.Model):
         keys = super()._key_assign_picking()
         manual_delivery = self.env.context.get("sale_manual_delivery")
         if manual_delivery:
-            keys += (self.sale_line_id.order_id, )
+            keys += (self.sale_line_id.order_id,)
         return keys
 
     def _search_picking_for_assignation_domain(self):

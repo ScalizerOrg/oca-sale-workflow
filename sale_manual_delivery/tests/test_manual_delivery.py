@@ -3,12 +3,14 @@ import logging
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
+
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.sale.tests.common import TestSaleCommon
 
 _logger = logging.getLogger(__name__)
+
 
 @tagged("post_install", "-at_install")
 class TestSaleStock(TestSaleCommon):
@@ -21,7 +23,6 @@ class TestSaleStock(TestSaleCommon):
         cls.warehouse = cls.env.ref("stock.warehouse0")
         cls.company = cls.env.ref("base.main_company")
 
-
         # Stock location
         cls.stock_location = cls.env.ref("stock.stock_location_stock")
 
@@ -29,7 +30,6 @@ class TestSaleStock(TestSaleCommon):
             {
                 "name": "Test Delivery Product 1",
                 "is_storable": True,
-
                 "list_price": 100.0,
             }
         )
@@ -110,7 +110,6 @@ class TestSaleStock(TestSaleCommon):
                 "product_id": delivery_product.id,
             }
         )
-
 
     def _manual_delivery_wizard(self, records, vals=None):
         vals = vals or {}
