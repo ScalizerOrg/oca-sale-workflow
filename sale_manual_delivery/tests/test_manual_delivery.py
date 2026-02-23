@@ -355,8 +355,7 @@ class TestSaleStock(TestSaleCommon):
         wizard = self._manual_delivery_wizard(some_lines)
         self.assertEqual(sum(wizard.line_ids.mapped("quantity")), 4.0)
         wizard.confirm()
-        order3._invalidate_cache(["picking_ids"])
-        order3.flush_recordset()
+
         self.assertEqual(len(order3.picking_ids), 1)
         self.assertEqual(len(order3.picking_ids.move_ids), 1)
         self.assertFalse(order2.picking_ids)
