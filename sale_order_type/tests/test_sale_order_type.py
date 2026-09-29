@@ -48,9 +48,6 @@ class TestSaleOrderType(BaseCommon):
         )
         cls.default_sale_type_id = cls.env["sale.order.type"].search([], limit=1)
         cls.default_sale_type_id.sequence_id = False
-        cls.warehouse = cls.env["stock.warehouse"].create(
-            {"name": "Warehouse Test", "code": "WT"}
-        )
         cls.product = cls.env["product.product"].create(
             {"type": "service", "invoice_policy": "order", "name": "Test product"}
         )
@@ -58,17 +55,13 @@ class TestSaleOrderType(BaseCommon):
         cls.sale_pricelist = cls.env["product.pricelist"].create(
             {"name": "Public Pricelist", "sequence": 1}
         )
-        cls.free_carrier = cls.env.ref("account.incoterm_FCA")
         cls.sale_type = cls.sale_type_model.create(
             {
                 "name": "Test Sale Order Type",
                 "sequence_id": cls.sequence.id,
                 "journal_id": cls.journal.id,
-                "warehouse_id": cls.warehouse.id,
-                "picking_policy": "one",
                 "payment_term_id": cls.immediate_payment.id,
                 "pricelist_id": cls.sale_pricelist.id,
-                "incoterm_id": cls.free_carrier.id,
                 "quotation_validity_days": 10,
             }
         )
@@ -77,11 +70,8 @@ class TestSaleOrderType(BaseCommon):
                 "name": "Test Quotation Type",
                 "sequence_id": cls.sequence_quot.id,
                 "journal_id": cls.journal.id,
-                "warehouse_id": cls.warehouse.id,
-                "picking_policy": "one",
                 "payment_term_id": cls.immediate_payment.id,
                 "pricelist_id": cls.sale_pricelist.id,
-                "incoterm_id": cls.free_carrier.id,
             }
         )
         cls.sale_type_sequence_default = cls.sale_type_quot.copy(
@@ -94,41 +84,6 @@ class TestSaleOrderType(BaseCommon):
             }
         )
         cls.partner.sale_type = cls.sale_type
-        cls.sale_route = cls.env["stock.route"].create(
-            {
-                "name": "SO -> Customer",
-                "product_selectable": True,
-                "sale_selectable": True,
-                "rule_ids": [
-                    (
-                        0,
-                        0,
-                        {
-                            "name": "SO -> Customer",
-                            "action": "pull",
-                            "picking_type_id": cls.env.ref("stock.picking_type_in").id,
-                            "location_src_id": cls.warehouse.lot_stock_id.id,
-                            "location_dest_id": cls.env.ref(
-                                "stock.stock_location_customers"
-                            ).id,
-                        },
-                    )
-                ],
-            }
-        )
-        cls.sale_type_route = cls.sale_type_model.create(
-            {
-                "name": "Test Sale Order Type-1",
-                "sequence_id": cls.sequence.id,
-                "journal_id": cls.journal.id,
-                "warehouse_id": cls.warehouse.id,
-                "picking_policy": "one",
-                "payment_term_id": cls.immediate_payment.id,
-                "pricelist_id": cls.sale_pricelist.id,
-                "incoterm_id": cls.free_carrier.id,
-                "route_ids": [(6, 0, [cls.sale_route.id])],
-            }
-        )
 
     def create_sale_order(self, partner=False):
         sale_form = Form(self.env["sale.order"])
@@ -154,11 +109,8 @@ class TestSaleOrderType(BaseCommon):
         sale_type = self.sale_type
         order = self.create_sale_order()
         self.assertEqual(order.type_id, sale_type)
-        self.assertEqual(order.warehouse_id, sale_type.warehouse_id)
-        self.assertEqual(order.picking_policy, sale_type.picking_policy)
         self.assertEqual(order.payment_term_id, sale_type.payment_term_id)
         self.assertEqual(order.pricelist_id, sale_type.pricelist_id)
-        self.assertEqual(order.incoterm, sale_type.incoterm_id)
         order.action_confirm()
         invoice = order._create_invoices()
         self.assertEqual(invoice.sale_type_id, sale_type)
@@ -193,19 +145,6 @@ class TestSaleOrderType(BaseCommon):
     def test_invoice_without_partner(self):
         invoice = self.invoice_model.new()
         self.assertEqual(invoice.sale_type_id, self.default_sale_type_id)
-
-    def test_sale_order_flow_route(self):
-        order = self.create_sale_order()
-        order.type_id = self.sale_type_route.id
-        self.assertEqual(order.type_id.route_ids, order.order_line[0].route_ids)
-        sale_line_dict = {
-            "product_id": self.product.id,
-            "name": self.product.name,
-            "product_uom_qty": 2.0,
-            "price_unit": self.product.lst_price,
-        }
-        order.write({"order_line": [(0, 0, sale_line_dict)]})
-        self.assertEqual(order.type_id.route_ids, order.order_line[1].route_ids)
 
     def test_sale_order_in_draft_state_update_name(self):
         order = self.create_sale_order()
