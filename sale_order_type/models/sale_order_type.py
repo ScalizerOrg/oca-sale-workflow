@@ -22,16 +22,6 @@ class SaleOrderTypology(models.Model):
         domain="[('type', '=', 'sale')]",
         check_company=True,
     )
-    warehouse_id = fields.Many2one(
-        comodel_name="stock.warehouse", string="Warehouse", check_company=True
-    )
-    picking_policy = fields.Selection(
-        selection=lambda self: self._get_selection_picking_policy(),
-        string="Shipping Policy",
-        default=lambda self: self.env["sale.order"]
-        .default_get(["picking_policy"])
-        .get("picking_policy"),
-    )
     company_id = fields.Many2one(
         comodel_name="res.company",
         default=lambda self: self.env.company,
@@ -42,14 +32,6 @@ class SaleOrderTypology(models.Model):
     )
     pricelist_id = fields.Many2one(
         comodel_name="product.pricelist", string="Pricelist", check_company=True
-    )
-    incoterm_id = fields.Many2one(comodel_name="account.incoterms", string="Incoterm")
-    route_ids = fields.Many2many(
-        "stock.route",
-        string="Routes",
-        domain=[("sale_selectable", "=", True)],
-        ondelete="restrict",
-        check_company=True,
     )
     analytic_account_id = fields.Many2one(
         comodel_name="account.analytic.account",
@@ -63,9 +45,3 @@ class SaleOrderTypology(models.Model):
     def _get_domain_sequence_id(self):
         seq_type = self.env.ref("sale.seq_sale_order")
         return [("code", "=", seq_type.code)]
-
-    @api.model
-    def _get_selection_picking_policy(self):
-        return self.env["sale.order"].fields_get(allfields=["picking_policy"])[
-            "picking_policy"
-        ]["selection"]

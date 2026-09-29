@@ -8,7 +8,7 @@
 
 {
     "name": "Sale Order Type",
-    "version": "19.0.1.1.0",
+    "version": "19.0.2.0.0",
     "category": "Sales Management",
     "author": "Grupo Vermon,"
     "AvanzOSC,"
@@ -18,7 +18,7 @@
     "Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/sale-workflow",
     "license": "AGPL-3",
-    "depends": ["sale_stock", "account", "sale_management"],
+    "depends": ["account", "sale_management"],
     "demo": ["demo/sale_order_demo.xml"],
     "data": [
         "security/ir.model.access.csv",
